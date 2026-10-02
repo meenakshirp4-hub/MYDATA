@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Market Dashboard</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0b1220;color:#e8eef8}
+  .wrap{max-width:1200px;margin:auto;padding:18px}
+  header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+  h1{font-size:24px;margin:0}
+  .status{font-size:12px;color:#9fb0c8}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .card{background:#121c2d;border:1px solid #22314a;border-radius:12px;padding:16px}
+  .name{font-size:13px;color:#9fb0c8;margin-bottom:10px}
+  .price{font-size:25px;font-weight:700}
+  .chg{margin-top:7px;font-weight:600}
+  .up{color:#39d98a}.down{color:#ff6b7a}
+  .section{margin:24px 0 10px;font-size:16px;font-weight:700}
+  .table{background:#121c2d;border:1px solid #22314a;border-radius:12px;overflow:hidden}
+  .row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:13px 16px;border-bottom:1px solid #22314a;align-items:center}
+  .row:last-child{border-bottom:0}
+  .head{font-size:12px;color:#8192aa;background:#0f1828}
+  .small{font-size:12px;color:#8192aa}
+  .note{margin-top:18px;color:#8192aa;font-size:12px;line-height:1.5}
+  @media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:500px){
+    .wrap{padding:12px}.grid{grid-template-columns:1fr 1fr;gap:8px}
+    .card{padding:12px}.price{font-size:20px}
+    .row{grid-template-columns:1.6fr 1fr 1fr 1fr;padding:11px 10px;font-size:13px}
+    h1{font-size:20px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>📊 My Market Dashboard</h1>
+      <div class="status">Prototype • prices currently simulated</div>
+    </div>
+    <div class="status">Auto refresh: <span id="timer">10</span>s</div>
+  </header>
+
+  <div class="grid" id="cards"></div>
+
+  <div class="section">🇮🇳 Indian Markets</div>
+  <div class="table" id="india"></div>
+
+  <div class="section">📈 My Watchlist / Portfolio</div>
+  <div class="table" id="portfolio"></div>
+
+  <div class="note">
+    This is the first frontend prototype. The numbers are placeholders so the page can be tested safely.
+    The next step is connecting a legitimate market-data API for real-time or delayed prices.
+  </div>
+</div>
+
+<script>
+const markets = [
+  ["Dow Futures", 46850, 0.32],
+  ["Nasdaq Futures", 24780, 0.48],
+  ["DAX", 24180, 0.51],
+  ["US 10Y Yield", 4.12, -0.03],
+  ["Gold", 3860, 0.45],
+  ["Brent Crude", 67.20, -0.28],
+  ["DXY", 98.40, 0.11],
+  ["Copper", 4.72, 0.36]
+];
+
+const india = [
+  ["NIFTY 50", 26000, 0.40],
+  ["BANK NIFTY", 59000, 0.65],
+  ["SENSEX", 85000, 0.32],
+  ["INDIA VIX", 13.8, -1.20]
+];
+
+const portfolio = [
+  ["Gujarat Energy", 3200, 0, 0],
+  ["Man Infra", 0, 0, 0],
+  ["Likhita", 0, 0, 0],
+  ["Jindal Drilling", 0, 0, 0]
+];
+
+function fmt(n){
+  if(n < 10) return n.toFixed(2);
+  return n.toLocaleString("en-IN",{maximumFractionDigits:2});
+}
+function cls(x){return x>=0 ? "up" : "down";}
+function sign(x){return x>=0 ? "+" : "";}
+
+function render(){
+  document.getElementById("cards").innerHTML = markets.map(m => `
+    <div class="card">
+      <div class="name">${m[0]}</div>
+      <div class="price">${fmt(m[1])}</div>
+      <div class="chg ${cls(m[2])}">${sign(m[2])}${m[2].toFixed(2)}%</div>
+    </div>`).join("");
+
+  document.getElementById("india").innerHTML =
+    `<div class="row head"><div>Index</div><div>Price</div><div>Change</div><div>Status</div></div>` +
+    india.map(x=>`<div class="row">
+      <div>${x[0]}</div><div>${fmt(x[1])}</div>
+      <div class="${cls(x[2])}">${sign(x[2])}${x[2].toFixed(2)}%</div>
+      <div class="${cls(x[2])}">${x[2]>=0?"UP":"DOWN"}</div>
+    </div>`).join("");
+
+  document.getElementById("portfolio").innerHTML =
+    `<div class="row head"><div>Stock</div><div>Qty</div><div>Price</div><div>Change</div></div>` +
+    portfolio.map(x=>`<div class="row">
+      <div>${x[0]}</div><div>${x[1] || "—"}</div>
+      <div>${x[2] ? fmt(x[2]) : "—"}</div>
+      <div class="${cls(x[3])}">${x[3] ? sign(x[3])+x[3].toFixed(2)+"%" : "—"}</div>
+    </div>`).join("");
+}
+render();
+
+let t=10;
+setInterval(()=>{
+  t--;
+  if(t<=0){
+    t=10;
+    // Simulate tiny movement for prototype demonstration only.
+    markets.forEach(m=>{
+      const move=(Math.random()-0.5)*0.08;
+      m[1]=m[1]*(1+move/100);
+      m[2]=m[2]+move;
+    });
+    render();
+  }
+  document.getElementById("timer").textContent=t;
+},1000);
+</script>
+</body>
+</html>
